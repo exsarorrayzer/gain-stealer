@@ -24,3 +24,4 @@ from win32com.shell import shell, shellcon
 import win32api
 import win32con
 import win32security
+import random
