@@ -10,6 +10,7 @@ import subprocess
 import sys
 import requests
 from datetime import datetime
+import random
 
 class ModularGainBuilder:
     def __init__(self, root):
