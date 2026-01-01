@@ -1,0 +1,7 @@
+pyinstaller
+requests
+pycryptodome
+browser_cookie3
+pywin32
+psutil
+pyperclip
