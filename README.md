@@ -46,17 +46,6 @@
 
     Persistence: Registry + Startup folder
 
-    Self-Destruct: Self-deletion after execution
-
-🔧 Obfuscation Options
-
-    Remove comments
-
-    Base64 encoding
-
-    Add junk code
-
-    PyArmor integration
 
 # 🚀 Installation & Usage
 open cmd and type
