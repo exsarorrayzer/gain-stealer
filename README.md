@@ -120,7 +120,6 @@ Python Script
 
     .py executable script
 
-    Obfuscation options applied
 
 Executable (EXE)
 
@@ -151,7 +150,6 @@ Stealth Features
 
     Legitimate Icon: Can use custom icons (Word, PDF, etc.)
 
-    File Binding: Can bind with legitimate files
 
 🔧 Technical Details
 Data Collection Process
